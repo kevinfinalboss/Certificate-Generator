@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado de Conclusão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Montserrat:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f0f0f0;
+        }
+        .certificate {
+            font-family: 'Cormorant Garamond', serif;
+            background-image: url('/api/placeholder/800/600');
+            background-size: cover;
+            background-position: center;
+        }
+        .signature {
+            font-family: 'Dancing Script', cursive;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="certificate bg-white shadow-2xl rounded-lg overflow-hidden w-full max-w-4xl">
+        <div class="border-16 border-double border-gray-300 m-8">
+            <div class="p-8 text-center">
+                <div class="flex justify-between items-center mb-8">
+                    <img src="/api/placeholder/100/50" alt=".;" class="w-24 h-auto">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold">Nº do Certificado</p>
+                        <p class="text-lg font-bold text-blue-600">2024001</p>
+                    </div>
+                </div>
+                
+                <h1 class="text-4xl font-bold mb-4 text-gray-800">Certificado de Conclusão</h1>
+                
+                <p class="text-xl mb-8">Este documento certifica que</p>
+                
+                <h2 class="text-3xl font-bold mb-8 text-blue-700">[Nome do Participante]</h2>
+                
+                <p class="text-xl mb-8">concluiu com êxito o curso de</p>
+                
+                <h3 class="text-2xl font-bold mb-8 text-gray-700">[Nome do Curso]</h3>
+                
+                <p class="text-lg mb-8">com carga horária total de [X] horas, realizado no período de [Data Inicial] a [Data Final].</p>
+                
+                <div class="flex justify-between items-center mt-16">
+                    <div class="text-center">
+                        <img src="/api/placeholder/150/60" alt="Assinatura do Diretor" class="mx-auto mb-2">
+                        <p class="font-semibold">[Nome do Diretor]</p>
+                        <p class="text-sm">Diretor da Instituição</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="/api/placeholder/150/60" alt="Assinatura do Coordenador" class="mx-auto mb-2">
+                        <p class="font-semibold">[Nome do Coordenador]</p>
+                        <p class="text-sm">Coordenador do Curso</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-sm text-gray-600">
+                    <p>Emitido em [Data de Emissão]</p>
+                    <p>Válido em todo o território nacional</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
