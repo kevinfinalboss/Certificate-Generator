@@ -1,8 +1,9 @@
 package main
 
 type CertificateData struct {
-	UUID            string `json:"UUID"`
+	UUID            string `json:"uuid"`
 	ParticipantName string `json:"participant_name"`
+	CompanyName     string `json:"company_name"`
 	CourseName      string `json:"course_name"`
 	TotalHours      string `json:"total_hours"`
 	StartDate       string `json:"start_date"`
