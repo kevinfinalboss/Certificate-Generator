@@ -1,0 +1,15 @@
+name: Debug Job
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug Action Trigger
+      run: |
+        echo "This action was triggered!"
+        echo "Event name: ${{ github.event_name }}"
+        echo "PR number: ${{ github.event.pull_request.number }}"
