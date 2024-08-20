@@ -29,7 +29,6 @@ jobs:
           ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env' | sed 's/-env//' || echo '')
         else
           TF_PATH="./terraform/s3"  # Default path for push events
-          ENVIRONMENT="dev"  # Default environment for push events
         fi
         echo "TF_PATH=$TF_PATH" >> $GITHUB_OUTPUT
         echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_OUTPUT
