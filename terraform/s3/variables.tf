@@ -16,7 +16,6 @@ variable "lifecycle_transition_days" {
   description = "Número de dias para mover objetos para o armazenamento Standard-IA."
 }
 
-
 variable "deep_archive_transition_days" {
   type        = number
   default     = 90
