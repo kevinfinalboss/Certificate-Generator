@@ -11,6 +11,7 @@ resource "aws_lambda_function" "generate_certificates_lambda" {
     variables = {
       S3_BUCKET_NAME   = "kevindev-applications"
       S3_TEMPLATE_KEY  = "static/certificado.html"
+      DYNAMODB_TABLE_NAME = "Certificates"
     }
   }
 
