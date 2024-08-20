@@ -127,27 +127,27 @@
         <div class="certificate-content text-center">
             <div class="certificate-title">Certificado de Conclusão</div>
             <div class="certificate-subtitle">Este documento certifica que</div>
-            <div class="recipient-name">[Nome do Participante]</div>
+            <div class="recipient-name">{{.ParticipantName}}</div>
             <div class="certificate-subtitle">concluiu com êxito o curso de</div>
-            <div class="course-title">[Nome do Curso]</div>
+            <div class="course-title">{{.CourseName}}</div>
             <div class="details">
-                com carga horária total de [X] horas, realizado no período de [Data Inicial] a [Data Final].
+                com carga horária total de {{.TotalHours}} horas, realizado no período de {{.StartDate}} a {{.EndDate}}.
             </div>
             <div class="signatures">
                 <div class="signature">
                     <img src="signature_director.jpg" alt="Assinatura do Diretor">
-                    <div class="signature-name">[Nome do Diretor]</div>
+                    <div class="signature-name">{{.DirectorName}}</div>
                     <div class="signature-title">Diretor da Instituição</div>
                 </div>
                 <div class="signature">
                     <img src="signature_coordinator.jpg" alt="Assinatura do Coordenador">
-                    <div class="signature-name">[Nome do Coordenador]</div>
+                    <div class="signature-name">{{.CoordinatorName}}</div>
                     <div class="signature-title">Coordenador do Curso</div>
                 </div>
             </div>
         </div>
         <div class="footer">
-            <p>Emitido em [Data de Emissão]</p>
+            <p>Emitido em {{.IssueDate}}</p>
             <p>Válido em todo o território nacional</p>
         </div>
     </div>
