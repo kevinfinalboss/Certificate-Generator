@@ -1,71 +1,156 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificado de Conclusão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Montserrat:wght@400;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Montserrat:wght@400;700&family=Dancing+Script:wght@400;700&display=swap');
+
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: #f0f0f0;
+            padding: 20px;
         }
+
         .certificate {
             font-family: 'Cormorant Garamond', serif;
-            background-image: url('/api/placeholder/800/600');
-            background-size: cover;
-            background-position: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border: 8px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: auto;
+            position: relative;
         }
+
+        .certificate:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            bottom: -8px;
+            left: -8px;
+            right: -8px;
+            border: 2px solid #2980b9;
+            z-index: -1;
+        }
+
+        .header-logo {
+            width: 100px;
+            margin-bottom: 20px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            opacity: 0.9;
+        }
+
+        .certificate-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .certificate-title {
+            font-size: 40px;
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        .certificate-subtitle {
+            font-size: 24px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        .recipient-name {
+            font-size: 36px;
+            color: #2980b9;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .course-title {
+            font-size: 28px;
+            color: #34495e;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+
         .signature {
+            text-align: center;
+        }
+
+        .signature img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+
+        .signature-name {
             font-family: 'Dancing Script', cursive;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .signature-title {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+
+        .footer {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <div class="certificate bg-white shadow-2xl rounded-lg overflow-hidden w-full max-w-4xl">
-        <div class="border-16 border-double border-gray-300 m-8">
-            <div class="p-8 text-center">
-                <div class="flex justify-between items-center mb-8">
-                    <img src="/api/placeholder/100/50" alt=".;" class="w-24 h-auto">
-                    <div class="text-right">
-                        <p class="text-sm font-semibold">Nº do Certificado</p>
-                        <p class="text-lg font-bold text-blue-600">2024001</p>
-                    </div>
+
+<body>
+    <div class="certificate">
+        <img src="logo.jpg" alt="Logo da Instituição" class="header-logo">
+        <div class="certificate-content text-center">
+            <div class="certificate-title">Certificado de Conclusão</div>
+            <div class="certificate-subtitle">Este documento certifica que</div>
+            <div class="recipient-name">[Nome do Participante]</div>
+            <div class="certificate-subtitle">concluiu com êxito o curso de</div>
+            <div class="course-title">[Nome do Curso]</div>
+            <div class="details">
+                com carga horária total de [X] horas, realizado no período de [Data Inicial] a [Data Final].
+            </div>
+            <div class="signatures">
+                <div class="signature">
+                    <img src="signature_director.jpg" alt="Assinatura do Diretor">
+                    <div class="signature-name">[Nome do Diretor]</div>
+                    <div class="signature-title">Diretor da Instituição</div>
                 </div>
-                
-                <h1 class="text-4xl font-bold mb-4 text-gray-800">Certificado de Conclusão</h1>
-                
-                <p class="text-xl mb-8">Este documento certifica que</p>
-                
-                <h2 class="text-3xl font-bold mb-8 text-blue-700">[Nome do Participante]</h2>
-                
-                <p class="text-xl mb-8">concluiu com êxito o curso de</p>
-                
-                <h3 class="text-2xl font-bold mb-8 text-gray-700">[Nome do Curso]</h3>
-                
-                <p class="text-lg mb-8">com carga horária total de [X] horas, realizado no período de [Data Inicial] a [Data Final].</p>
-                
-                <div class="flex justify-between items-center mt-16">
-                    <div class="text-center">
-                        <img src="/api/placeholder/150/60" alt="Assinatura do Diretor" class="mx-auto mb-2">
-                        <p class="font-semibold">[Nome do Diretor]</p>
-                        <p class="text-sm">Diretor da Instituição</p>
-                    </div>
-                    <div class="text-center">
-                        <img src="/api/placeholder/150/60" alt="Assinatura do Coordenador" class="mx-auto mb-2">
-                        <p class="font-semibold">[Nome do Coordenador]</p>
-                        <p class="text-sm">Coordenador do Curso</p>
-                    </div>
-                </div>
-                
-                <div class="mt-8 text-sm text-gray-600">
-                    <p>Emitido em [Data de Emissão]</p>
-                    <p>Válido em todo o território nacional</p>
+                <div class="signature">
+                    <img src="signature_coordinator.jpg" alt="Assinatura do Coordenador">
+                    <div class="signature-name">[Nome do Coordenador]</div>
+                    <div class="signature-title">Coordenador do Curso</div>
                 </div>
             </div>
         </div>
+        <div class="footer">
+            <p>Emitido em [Data de Emissão]</p>
+            <p>Válido em todo o território nacional</p>
+        </div>
     </div>
 </body>
+
 </html>
