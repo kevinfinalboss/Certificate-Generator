@@ -1,0 +1,10 @@
+{
+    "httpMethod": "GET",
+    "queryStringParameters": {
+      "uuid": "8e6dcaca-6223-4316-8ac0-e2b176a2a727"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+  
