@@ -2,8 +2,11 @@ name: Terraform Plan
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - master
+    paths:
+      - 'terraform/**'
 
 jobs:
   terraform_plan:
@@ -16,9 +19,18 @@ jobs:
     - name: Extract PR information
       id: pr_info
       run: |
-        echo "TF_PATH=$(echo '${{ github.event.pull_request.body }}' | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+')" >> $GITHUB_OUTPUT
-        ENVIRONMENT=$(echo '${{ github.event.pull_request.body }}' | grep -oP '- \[x\] \K(dev|uat|it|prd)-env')
+        PR_BODY=$(cat << EOF
+        ${{ github.event.pull_request.body }}
+        EOF
+        )
+        echo "TF_PATH=$(echo "$PR_BODY" | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+')" >> $GITHUB_OUTPUT
+        ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env')
         echo "ENVIRONMENT=${ENVIRONMENT%-env}" >> $GITHUB_OUTPUT
+
+    - name: Debug PR Info
+      run: |
+        echo "TF_PATH: ${{ steps.pr_info.outputs.TF_PATH }}"
+        echo "ENVIRONMENT: ${{ steps.pr_info.outputs.ENVIRONMENT }}"
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
