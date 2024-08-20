@@ -2,11 +2,9 @@ name: Terraform Plan
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, edited]
     branches:
-      - 'master'
-    paths:
-      - 'terraform/**'
+      - '*'
 
 jobs:
   terraform_plan:
@@ -14,26 +12,25 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Extract PR information
       id: pr_info
       run: |
-        PR_BODY=$(cat << EOF
-        ${{ github.event.pull_request.body }}
-        EOF
-        )
-        echo "TF_PATH=$(echo "$PR_BODY" | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+')" >> $GITHUB_OUTPUT
-        ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env')
-        echo "ENVIRONMENT=${ENVIRONMENT%-env}" >> $GITHUB_OUTPUT
+        PR_BODY="${{ github.event.pull_request.body }}"
+        TF_PATH=$(echo "$PR_BODY" | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+' || echo '')
+        ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env' | sed 's/-env//' || echo '')
+        echo "TF_PATH=$TF_PATH" >> $GITHUB_OUTPUT
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_OUTPUT
 
-    - name: Debug PR Info
+    - name: Debug Info
       run: |
+        echo "PR Number: ${{ github.event.pull_request.number }}"
         echo "TF_PATH: ${{ steps.pr_info.outputs.TF_PATH }}"
         echo "ENVIRONMENT: ${{ steps.pr_info.outputs.ENVIRONMENT }}"
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
+      uses: hashicorp/setup-terraform@v2
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -42,33 +39,32 @@ jobs:
         aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', steps.pr_info.outputs.ENVIRONMENT)] }}
         aws-region: ${{ secrets[format('AWS_REGION_{0}', steps.pr_info.outputs.ENVIRONMENT)] }}
 
-    - name: Terraform Init
-      run: |
-        cd ${{ steps.pr_info.outputs.TF_PATH }}
-        terraform init
-
-    - name: Terraform Plan
+    - name: Terraform Init and Plan
       id: plan
       run: |
+        if [ -z "${{ steps.pr_info.outputs.TF_PATH }}" ] || [ -z "${{ steps.pr_info.outputs.ENVIRONMENT }}" ]; then
+          echo "Missing required information. Please check your PR description."
+          exit 1
+        fi
         cd ${{ steps.pr_info.outputs.TF_PATH }}
+        terraform init
         terraform plan -no-color -out=tfplan
       continue-on-error: true
 
-    - name: Terraform Show
-      id: show
-      run: |
-        cd ${{ steps.pr_info.outputs.TF_PATH }}
-        terraform show -no-color tfplan > tfplan.txt
-
     - name: Comment PR
       uses: actions/github-script@v6
+      if: always()
       env:
-        PLAN: "${{ steps.show.outputs.stdout }}"
+        PLAN: "${{ steps.plan.outputs.stdout }}"
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const fs = require('fs');
-          const plan = fs.readFileSync('${{ steps.pr_info.outputs.TF_PATH }}/tfplan.txt', 'utf8');
+          let plan = 'Terraform plan failed or was not executed.';
+          const planPath = '${{ steps.pr_info.outputs.TF_PATH }}/tfplan';
+          if (fs.existsSync(planPath)) {
+            plan = fs.readFileSync(planPath, 'utf8');
+          }
           const output = `#### Terraform Plan 📝\`${{ steps.plan.outcome }}\`
           
           <details><summary>Show Plan</summary>
