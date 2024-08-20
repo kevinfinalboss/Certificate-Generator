@@ -15,3 +15,11 @@ variable "s3_bucket_name" {
   type        = string
   default     = "kevindev-applications"
 }
+
+variable "dynamodb_table_name" {
+  description = "O nome da tabela DynamoDB para armazenar os dados"
+  type        = string
+  default     = "Certificates"
+}
+
+data "aws_caller_identity" "current" {}
