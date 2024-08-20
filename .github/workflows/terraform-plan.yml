@@ -8,8 +8,9 @@ on:
       - master
 
 jobs:
-  debug_and_plan:
+  terraform_plan:
     runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -17,8 +18,7 @@ jobs:
     - name: Debug Event
       run: |
         echo "Event name: ${{ github.event_name }}"
-        echo "GitHub context: ${{ toJson(github) }}"
-        echo "PR body: ${{ github.event.pull_request.body }}"
+        echo "Event payload: ${{ toJson(github.event) }}"
 
     - name: Extract PR information
       id: pr_info
@@ -28,8 +28,8 @@ jobs:
           TF_PATH=$(echo "$PR_BODY" | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+' || echo '')
           ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env' | sed 's/-env//' || echo '')
         else
-          TF_PATH="./terraform/s3"
-          ENVIRONMENT="dev"
+          TF_PATH="./terraform/s3"  # Default path for push events
+          ENVIRONMENT="dev"  # Default environment for push events
         fi
         echo "TF_PATH=$TF_PATH" >> $GITHUB_OUTPUT
         echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_OUTPUT
@@ -41,13 +41,57 @@ jobs:
         echo "TF_PATH: ${{ steps.pr_info.outputs.TF_PATH }}"
         echo "ENVIRONMENT: ${{ steps.pr_info.outputs.ENVIRONMENT }}"
 
-    - name: List Repository Contents
-      run: |
-        echo "Repository contents:"
-        ls -R
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
 
-    - name: Always Run
-      if: always()
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', steps.pr_info.outputs.ENVIRONMENT)] }}
+        aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', steps.pr_info.outputs.ENVIRONMENT)] }}
+        aws-region: ${{ secrets[format('AWS_REGION_{0}', steps.pr_info.outputs.ENVIRONMENT)] }}
+
+    - name: Terraform Init and Plan
+      id: plan
       run: |
-        echo "This step will always run, even if previous steps fail"
-        echo "It can be used for cleanup or final debugging"
+        cd ${{ steps.pr_info.outputs.TF_PATH }}
+        terraform init
+        terraform plan -no-color -out=tfplan
+      continue-on-error: true
+
+    - name: Comment PR
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN: "${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const fs = require('fs');
+          let plan = 'Terraform plan failed or was not executed.';
+          const planPath = '${{ steps.pr_info.outputs.TF_PATH }}/tfplan';
+          if (fs.existsSync(planPath)) {
+            plan = fs.readFileSync(planPath, 'utf8');
+          }
+          const output = `#### Terraform Plan 📝\`${{ steps.plan.outcome }}\`
+          
+          <details><summary>Show Plan</summary>
+          
+          \`\`\`terraform\n
+          ${plan}
+          \`\`\`
+          
+          </details>
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Terraform Plan Status
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
