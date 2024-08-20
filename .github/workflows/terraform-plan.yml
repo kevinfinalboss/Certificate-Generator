@@ -1,0 +1,53 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches:
+      - master
+
+jobs:
+  debug_and_plan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Debug Event
+      run: |
+        echo "Event name: ${{ github.event_name }}"
+        echo "GitHub context: ${{ toJson(github) }}"
+        echo "PR body: ${{ github.event.pull_request.body }}"
+
+    - name: Extract PR information
+      id: pr_info
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_BODY="${{ github.event.pull_request.body }}"
+          TF_PATH=$(echo "$PR_BODY" | grep -oP 'PATH_TO_TERRAFORM=\K[^\s]+' || echo '')
+          ENVIRONMENT=$(echo "$PR_BODY" | grep -oP '- \[x\] \K(dev|uat|it|prd)-env' | sed 's/-env//' || echo '')
+        else
+          TF_PATH="./terraform/s3"
+          ENVIRONMENT="dev"
+        fi
+        echo "TF_PATH=$TF_PATH" >> $GITHUB_OUTPUT
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_OUTPUT
+
+    - name: Debug Info
+      run: |
+        echo "Event Type: ${{ github.event_name }}"
+        echo "PR Number: ${{ github.event.pull_request.number }}"
+        echo "TF_PATH: ${{ steps.pr_info.outputs.TF_PATH }}"
+        echo "ENVIRONMENT: ${{ steps.pr_info.outputs.ENVIRONMENT }}"
+
+    - name: List Repository Contents
+      run: |
+        echo "Repository contents:"
+        ls -R
+
+    - name: Always Run
+      if: always()
+      run: |
+        echo "This step will always run, even if previous steps fail"
+        echo "It can be used for cleanup or final debugging"
