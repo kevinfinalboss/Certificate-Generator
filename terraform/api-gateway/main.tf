@@ -4,7 +4,7 @@ resource "aws_apigatewayv2_api" "certificate_api" {
 
   cors_configuration {
     allow_headers = ["*"]
-    allow_methods = ["GET", "OPTIONS"]
+    allow_methods = ["GET", "POST", "OPTIONS"]
     allow_origins = ["*"]
   }
 }
@@ -29,6 +29,14 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
 resource "aws_apigatewayv2_route" "get_certificate_route" {
   api_id    = aws_apigatewayv2_api.certificate_api.id
   route_key = "GET /certificates"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+
+  authorization_type = "NONE"
+}
+
+resource "aws_apigatewayv2_route" "post_certificate_route" {
+  api_id    = aws_apigatewayv2_api.certificate_api.id
+  route_key = "POST /certificates"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 
   authorization_type = "NONE"
