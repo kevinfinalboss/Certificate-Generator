@@ -15,3 +15,9 @@ variable "lambda_invoke_arn" {
   type        = string
   default     = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:116981773635:function:generate-certificates/invocations"
 }
+
+variable "environment" {
+  type        = string
+  default     = "PRD"
+  description = "Ambiente de deploy (dev, prod, etc.)"
+}
