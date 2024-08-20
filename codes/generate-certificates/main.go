@@ -2,13 +2,13 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -61,24 +61,25 @@ func init() {
 	log.Println("HTML template loaded and parsed successfully")
 }
 
-func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Printf("Received request: %v", request)
 
 	switch request.HTTPMethod {
 	case "POST":
-		return handlePost(ctx, request)
+		return handlePost(request)
 	case "GET":
-		return handleGet(ctx, request)
+		return handleGet(request)
 	default:
 		log.Printf("Invalid HTTP method: %s", request.HTTPMethod)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusMethodNotAllowed,
 			Body:       "Method Not Allowed",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 }
 
-func handlePost(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handlePost(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Println("Handling POST request")
 
 	var data CertificateData
@@ -88,11 +89,29 @@ func handlePost(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       "Invalid request body",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
 	if data.UUID == "" {
 		data.UUID = uuid.New().String()
+	}
+
+	data.StartDate, err = formatDate(data.StartDate)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       "Invalid start date format",
+			Headers:    securityHeaders(),
+		}, nil
+	}
+	data.EndDate, err = formatDate(data.EndDate)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       "Invalid end date format",
+			Headers:    securityHeaders(),
+		}, nil
 	}
 
 	log.Printf("Generated UUID: %s", data.UUID)
@@ -103,14 +122,13 @@ func handlePost(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "Failed to marshal item",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
 	if _, ok := item["UUID"]; !ok {
 		item["UUID"] = &dynamodb.AttributeValue{S: aws.String(data.UUID)}
 		log.Printf("Manually added UUID to the item: %s", data.UUID)
-	} else {
-		log.Printf("UUID after marshalling: %v", item["UUID"])
 	}
 
 	_, err = dynamoDBSvc.PutItem(&dynamodb.PutItemInput{
@@ -122,18 +140,28 @@ func handlePost(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "Failed to save item in DynamoDB",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
 	log.Printf("Certificate created successfully with UUID: %s", data.UUID)
 
+	certificateLink := fmt.Sprintf("https://certificates.kevindev.com.br/certificates?uuid=%s", data.UUID)
+	responseBody := map[string]string{
+		"message":         "Certificate created successfully",
+		"uuid":            data.UUID,
+		"certificateLink": certificateLink,
+	}
+
+	responseBodyJSON, _ := json.Marshal(responseBody)
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
-		Body:       fmt.Sprintf("Certificate created with UUID: %s", data.UUID),
+		Body:       string(responseBodyJSON),
+		Headers:    securityHeaders(),
 	}, nil
 }
 
-func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handleGet(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Println("Handling GET request")
 
 	uuid := request.QueryStringParameters["uuid"]
@@ -142,6 +170,7 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       "UUID parameter is required",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
@@ -159,6 +188,7 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "Failed to retrieve item from DynamoDB",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
@@ -167,6 +197,7 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusNotFound,
 			Body:       "Certificate not found",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
@@ -177,7 +208,12 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "Failed to unmarshal item",
+			Headers:    securityHeaders(),
 		}, nil
+	}
+
+	if data.CompanyName == "" {
+		data.CompanyName = "Your Company"
 	}
 
 	var filledTemplate bytes.Buffer
@@ -186,6 +222,7 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "Internal Server Error",
+			Headers:    securityHeaders(),
 		}, nil
 	}
 
@@ -198,6 +235,26 @@ func handleGet(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"Content-Type": "text/html",
 		},
 	}, nil
+}
+
+func formatDate(dateStr string) (string, error) {
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return "", err
+	}
+	return parsedDate.Format("02/01/2006"), nil
+}
+
+func securityHeaders() map[string]string {
+	return map[string]string{
+		"Strict-Transport-Security":    "max-age=63072000; includeSubdomains; preload",
+		"X-Content-Type-Options":       "nosniff",
+		"X-Frame-Options":              "DENY",
+		"X-XSS-Protection":             "1; mode=block",
+		"Access-Control-Allow-Origin":  "https://certificates.kevindev.com.br",
+		"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+		"Access-Control-Allow-Headers": "Content-Type, Authorization",
+	}
 }
 
 func main() {
