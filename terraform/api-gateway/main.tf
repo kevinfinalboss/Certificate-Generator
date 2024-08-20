@@ -23,7 +23,7 @@ resource "aws_apigatewayv2_stage" "prod" {
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id           = aws_apigatewayv2_api.certificate_api.id
   integration_type = "AWS_PROXY"
-  integration_uri  = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:GetCertificateFunction"
+  integration_uri  = var.lambda_invoke_arn
 }
 
 resource "aws_apigatewayv2_route" "get_certificate_route" {
