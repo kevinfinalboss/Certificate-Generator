@@ -8,6 +8,11 @@ resource "aws_dynamodb_table" "certificates" {
     type = "S"
   }
 
+  ttl {
+    attribute_name = "TTL"
+    enabled        = true
+  }
+
   tags = {
     Name        = var.dynamodb_table_name
     Environment = var.environment
